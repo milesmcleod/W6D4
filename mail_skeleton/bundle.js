@@ -68,12 +68,18 @@
 /***/ (function(module, exports, __webpack_require__) {
 
 const Router = __webpack_require__ (1);
+const Inbox = __webpack_require__ (2);
+
+const routes = {
+  inbox: Inbox
+};
 
 document.addEventListener("DOMContentLoaded", (docLoadEvent) => {
   let selected = document.querySelectorAll(".sidebar-nav li");
   let content = document.querySelector(".content");
-  let router = new Router (content);
+  let router = new Router (content, routes);
   router.start();
+  window.location.hash = 'inbox';
   selected.forEach((el) => {
     el.addEventListener("click", (e) => {
       let newLocation = e.target.innerText;
@@ -89,33 +95,94 @@ document.addEventListener("DOMContentLoaded", (docLoadEvent) => {
 /***/ (function(module, exports) {
 
 class Router {
-  constructor (node) {
+  constructor (node, routes) {
     this.node = node;
+    this.routes = routes;
   }
   start () {
     this.render();
     window.addEventListener('hashchange', (e) => {
       this.render();
-      console.log('starting');
     });
   }
   activeRoute () {
-    console.log('routing');
-    return window.location.hash.slice(1);
+    const newRoute = window.location.hash.slice(1);
+    return this.routes[`${newRoute}`];
   }
   render () {
-    console.log('rendering');
     this.node.innerHTML = '';
-    let routeName = this.activeRoute();
-    var p = document.createElement("P");
-    p.innerHTML = routeName;
-    this.node.appendChild(p);
+    let component = this.activeRoute();
+    if (!component) {
+      this.node.innerHTML = "";
+    } else {
+      this.node.innerHTML = "";
+      this.node.appendChild(component.render());
+    }
   }
 
 }
 
 
 module.exports = Router;
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const MessageStore = __webpack_require__(3);
+
+const Inbox = {
+
+  renderMessage(message) {
+    let li = document.createElement('LI');
+    li.className = 'message';
+    li.innerHTML = `<span class="from">${message.from}</span>
+    <span class="subject">${message.subject}</span>
+    <span class="body">${message.body}</span>`;
+    return li;
+  },
+
+  render () {
+    let ul = document.createElement('UL');
+    ul.className = 'messages';
+    let messages = MessageStore.getInboxMessages();
+    messages.forEach((message) => {
+      ul.appendChild(this.renderMessage(message));
+    });
+    return ul;
+  }
+};
+
+module.exports = Inbox;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports) {
+
+let messages = {
+  sent: [
+    {to: "friend@mail.com", subject: "Check this out", body: "It's so cool"},
+    {to: "person@mail.com", subject: "zzz", body: "so booring"}
+  ],
+  inbox: [
+    {from: "grandma@mail.com", subject: "Fwd: Fwd: Fwd: Check this out", body: 'dang this is cool'},
+    {from: "person@mail.com", subject: "Questionnaire", body: "Take this free quiz win $1000 dollars"}
+  ]
+};
+
+let MessageStore = {
+  getInboxMessages() {
+    return messages.inbox;
+  },
+
+  getSentMessages() {
+    return messages.sent;
+  }
+};
+
+module.exports = MessageStore;
 
 
 /***/ })
