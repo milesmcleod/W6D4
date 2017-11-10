@@ -9,13 +9,36 @@ let messages = {
   ]
 };
 
-let MessageStore = {
+const Message = function Message (from, to='', subject ='', body = '') {
+  this.from = from;
+  this.to = to;
+  this.subject = subject;
+  this.body = body;
+};
+
+let messageDraft = new Message();
+
+const MessageStore = {
+
   getInboxMessages() {
     return messages.inbox;
   },
 
   getSentMessages() {
     return messages.sent;
+  },
+
+  getMessageDraft() {
+    return messageDraft;
+  },
+
+  updateDraftField(field, value) {
+    messageDraft[`${field}`] = value;
+  },
+
+  sendDraft() {
+    messages.sent.push(messageDraft);
+    messageDraft = new Message();
   }
 };
 

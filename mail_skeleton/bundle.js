@@ -69,9 +69,13 @@
 
 const Router = __webpack_require__ (1);
 const Inbox = __webpack_require__ (2);
+const Sent = __webpack_require__ (4);
+const Compose = __webpack_require__(5);
 
 const routes = {
-  inbox: Inbox
+  inbox: Inbox,
+  sent: Sent,
+  compose: Compose
 };
 
 document.addEventListener("DOMContentLoaded", (docLoadEvent) => {
@@ -152,6 +156,7 @@ const Inbox = {
     });
     return ul;
   }
+
 };
 
 module.exports = Inbox;
@@ -172,17 +177,114 @@ let messages = {
   ]
 };
 
-let MessageStore = {
+const Message = function Message (from, to='', subject ='', body = '') {
+  this.from = from;
+  this.to = to;
+  this.subject = subject;
+  this.body = body;
+};
+
+let messageDraft = new Message();
+
+const MessageStore = {
+
   getInboxMessages() {
     return messages.inbox;
   },
 
   getSentMessages() {
     return messages.sent;
+  },
+
+  getMessageDraft() {
+    return messageDraft;
+  },
+
+  updateDraftField(field, value) {
+    messageDraft[`${field}`] = value;
+  },
+
+  sendDraft() {
+    messages.sent.push(messageDraft);
+    messageDraft = new Message();
   }
 };
 
 module.exports = MessageStore;
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const MessageStore = __webpack_require__(3);
+
+const Sent = {
+
+  renderMessage(message) {
+    let li = document.createElement('LI');
+    li.className = 'message';
+    li.innerHTML = `<span class="from">To: ${message.to}</span>
+    <span class="subject">${message.subject}</span>
+    <span class="body">${message.body}</span>`;
+    return li;
+  },
+
+  render () {
+    let ul = document.createElement('UL');
+    ul.className = 'messages';
+    let messages = MessageStore.getSentMessages();
+    messages.forEach((message) => {
+      ul.appendChild(this.renderMessage(message));
+    });
+    return ul;
+  }
+};
+
+module.exports = Sent;
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const MessageStore = __webpack_require__(3);
+
+const Compose = {
+
+  render () {
+    let div = document.createElement("DIV");
+    div.className = 'new-message';
+    div.innerHTML = this.renderForm();
+    div.addEventListener("change", (e) => {
+      let targ = e.target;
+      let name = targ.name;
+      let value = targ.value;
+      MessageStore.updateDraftField(name, value);
+    });
+    div.addEventListener("submit", (e) => {
+      e.preventDefault();
+      MessageStore.sendDraft();
+      window.location.hash = 'inbox';
+    });
+    return div;
+  },
+
+  renderForm() {
+    let currentDraft = MessageStore.getMessageDraft();
+    return `
+    <p class="new-message-header">New Message</p>
+    <form class="compose-form">
+      <input placeholder="Recipient" name="to" type="text" value="${currentDraft.to}">
+      <input placeholder="Subject" name="subject" type="text" value="${currentDraft.subject}">
+      <textarea name="body" rows="20">${currentDraft.body}</textarea>
+      <button type="submit" class="btn btn-primary submit-message">Send</button>
+    </form>
+    `;
+  }
+};
+
+module.exports = Compose;
 
 
 /***/ })
