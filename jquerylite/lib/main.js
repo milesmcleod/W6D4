@@ -34,10 +34,15 @@ $l.ajax = function (options) {
   };
   let xhrData = $l.extend(defaultObject, options);
   let xhr = new XMLHttpRequest();
-  xhr.open(xhrData.method, xhrData.url);
-  xhr.onload = xhrData.success;
-  debugger
-  xhr.send(xhrData.data);
+  xhr.open(xhrData.type, xhrData.url);
+  xhr.onload = function (e) {
+    if (xhr.status === 200) {
+      xhrData.success(xhr.response);
+    } else {
+      xhrData.error(xhr.response);
+    }
+  };
+  return xhr.send(JSON.stringify(xhrData.data));
 };
 
 window.$l = $l;
